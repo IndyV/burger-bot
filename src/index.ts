@@ -1,5 +1,8 @@
-import { Client } from 'discord.js';
+import { Client, Message } from 'discord.js';
 import * as express from 'express';
+
+import { frick } from './commands/frick';
+import { parseCommand } from './utils/parseCommand';
 
 const token = process.env.TOKEN;
 const port = process.env.PORT;
@@ -15,12 +18,12 @@ client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
 });
 
-client.on('message', async (message) => {
-  if (!message.author || message.author.bot || !message.reply) {
+client.on('message', async (message: Message) => {
+  if (message.channel.type !== 'text' || message.author.bot) {
     return;
   }
 
-  await message.reply('t');
+  parseCommand('!', [frick], message);
 });
 
 server.get('/', async (req, res) => {

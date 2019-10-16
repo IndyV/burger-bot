@@ -11,7 +11,9 @@
     "array-type": false,
     "ïndent": [true, "spaces", 2],
     "interface-over-type-literal": false,
+    "no-console": false,
     "no-unused-expression": [true, "allow-tagged-template"],
+    "no-string-throw": false,
     "object-literal-sort-keys": false,
     "ordered-imports": [true, {
       "grouped-imports": true,
