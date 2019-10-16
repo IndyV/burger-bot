@@ -1,7 +1,11 @@
 import { Client } from 'discord.js';
+import * as express from 'express';
 
 const token = process.env.TOKEN;
+const port = process.env.PORT;
+
 const client = new Client();
+const server = express();
 
 client.on('ready', () => {
   if (!client.user) {
@@ -19,4 +23,9 @@ client.on('message', async (message) => {
   await message.reply('t');
 });
 
+server.get('/', async (req, res) => {
+  res.send('It\'s burger time baby');
+});
+
 client.login(token);
+server.listen(port, () => console.log(`Listening on port ${port}`));
