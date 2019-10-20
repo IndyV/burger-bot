@@ -3,6 +3,7 @@ import * as express from 'express';
 
 import { frick } from './commands/frick';
 import { parseCommand } from './utils/parseCommand';
+import { webhook } from './routes/webhook';
 
 const token = process.env.TOKEN;
 const port = process.env.PORT;
@@ -26,9 +27,8 @@ client.on('message', async (message: Message) => {
   parseCommand('!', [frick], message);
 });
 
-server.get('/', async (req, res) => {
-  res.send('It\'s burger time baby');
-});
+server.use(express.json());
+server.use(webhook);
 
 client.login(token);
 server.listen(port, () => console.log(`Listening on port ${port}`));
