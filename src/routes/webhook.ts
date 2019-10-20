@@ -8,8 +8,15 @@ export function registerWebhook(router: IRouter<unknown>, client: Client) {
   });
 
   router.post('/', async (req, res) => {
-    const { commits: { length: commits }, repository: { full_name: repo } } = req.body;
-    const collection = await firestore().collection('repo').where('repo', '==', repo).get();
+    console.log(req.body);
+    const { ref, commits, repository: { full_name: repo, default_branch } } = req.body;
+    const split = ref.split('/');
+
+    if (split[split.length - 1] !== default_branch) {
+      return;
+    }
+
+    const collection = await firestore().collection('repos').where('repo', '==', repo).get();
 
     if (collection.empty) {
       return;
@@ -20,12 +27,12 @@ export function registerWebhook(router: IRouter<unknown>, client: Client) {
 
     collection.forEach((document) => {
       const data = document.data();
-      const next = data.commits + commits;
+      const next = data.commits + commits.length;
 
-      map.set(document.id, next);
+      map.set(data.channel, next);
       promises = [
         ...promises,
-        firestore().collection('repo').doc(document.id).update({
+        firestore().collection('repos').doc(document.id).update({
           commits: next
         })
       ];
