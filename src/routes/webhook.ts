@@ -8,7 +8,7 @@ export function registerWebhook(router: IRouter<unknown>, client: Client) {
   });
 
   router.post('/', async (req, res) => {
-    const { commits: { length: commits }, repo: { full_name: repo } } = req.body;
+    const { commits: { length: commits }, repository: { full_name: repo } } = req.body;
     const collection = await firestore().collection('repo').where('repo', '==', repo).get();
 
     if (collection.empty) {
