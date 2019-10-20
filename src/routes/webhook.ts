@@ -1,19 +1,52 @@
-import { Router } from 'express';
+import { Client, TextChannel } from 'discord.js';
+import { IRouter } from 'express';
+import { firestore } from 'firebase';
 
-const webhook = Router();
+export function registerWebhook(router: IRouter<unknown>, client: Client) {
+  router.get('/', async (req, res) => {
+    res.send('It\'s burger time baby');
+  });
 
-webhook.get('/', async (req, res) => {
-  res.send('It\'s burger time baby');
-});
+  router.post('/', async (req, res) => {
+    const { commits: { length: commits }, repo: { full_name: repo } } = req.body;
+    const collection = await firestore().collection('repo').where('repo', '==', repo).get();
 
-webhook.post('/', (req, res) => {
-  const authors = req.body.commits.map((commit: any) => commit.author.name);
+    if (collection.empty) {
+      return;
+    }
 
-  console.log("Commit ammount:", req.body.commits.length);
-  console.log("Authors:", ...authors);
-  console.log(`${req.body.head_commit.author.name} commited ${req.body.head_commit.message}`);
+    let promises: Promise<void>[] = [];
+    const map = new Map<string, number>();
 
-  res.sendStatus(204);
-});
+    collection.forEach((document) => {
+      const data = document.data();
+      const next = data.commits + commits;
 
-export { webhook };
+      map.set(document.id, next);
+      promises = [
+        ...promises,
+        firestore().collection('repo').doc(document.id).update({
+          commits: next
+        })
+      ];
+    });
+
+    await Promise.all(promises);
+
+    for (const [key, value] of map) {
+      if (value % 100 !== 0) {
+        continue;
+      }
+
+      const channel = client.channels.get(key) as TextChannel | undefined;
+
+      if (!channel) {
+        continue;
+      }
+
+      await channel.send('@everyone It\'s burger time baby!');
+    }
+
+    res.sendStatus(204);
+  });
+}

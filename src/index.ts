@@ -1,15 +1,26 @@
 import { Client, Message } from 'discord.js';
 import * as express from 'express';
+import { Router } from 'express';
+import * as firebase from 'firebase';
 
-import { frick } from './commands/frick';
+import { register } from './commands/register';
+import { registerWebhook } from './routes/webhook';
 import { parseCommand } from './utils/parseCommand';
-import { webhook } from './routes/webhook';
 
 const token = process.env.TOKEN;
 const port = process.env.PORT;
 
 const client = new Client();
 const server = express();
+
+firebase.initializeApp({
+  apiKey: 'AIzaSyCm8fqcHWtVKaqb9Z6yml8pAVI3OZ1MDG0',
+  authDomain: 'burgerbot-fdc33.firebaseapp.com',
+  databaseURL: 'https://burgerbot-fdc33.firebaseio.com',
+  projectId: 'burgerbot-fdc33',
+  storageBucket: 'burgerbot-fdc33.appspot.com',
+  appId: '1:11843797210:web:8c8836f9de517f928fa5e3'
+});
 
 client.on('ready', () => {
   if (!client.user) {
@@ -24,11 +35,16 @@ client.on('message', async (message: Message) => {
     return;
   }
 
-  parseCommand('!', [frick], message);
+  parseCommand('!', [register], message);
 });
 
 server.use(express.json());
-server.use(webhook);
+
+const router = Router();
+
+registerWebhook(router, client);
+
+server.use(router);
 
 client.login(token);
 server.listen(port, () => console.log(`Listening on port ${port}`));
